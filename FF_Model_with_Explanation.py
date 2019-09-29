@@ -3,7 +3,7 @@
 #%%
 ##########################################
 # Fama French Factors
-# September 28 2019
+# September 29 2019
 # Edited by Xinyu LIU
 # Originally from Qingyi (Freda) Song Drechsler
 ##########################################
@@ -23,7 +23,7 @@ import datetime
 ###################
 # Connect to WRDS #
 ###################
-db = wrds.Connection(wrds_username='dachxiu')
+conn = wrds.Connection(wrds_username='dachxiu')
 #make it a constant portal by creating ppass
 
 ###################
@@ -70,7 +70,7 @@ comp['txditc']=comp['txditc'].fillna(0)
 # create book equity
 comp['be']=comp['seq']+comp['txditc']-comp['ps']
 comp['be']=np.where(comp['be']>0, comp['be'], np.nan)
-#Book value of equity equals to Stockholders Equity + Stockholders Equity - Preferred Stocks 
+#Book value of equity equals to Stockholders Equity + Deferred Tax - Preferred Stocks 
 #set nan value for book equity that is less than 0
 
 # number of years in Compustat
@@ -254,12 +254,8 @@ ccm_jun['beme']=ccm_jun['be']*1000/ccm_jun['dec_me']
 
 # select NYSE stocks for bucket breakdown
 # exchcd = 1 and positive beme and positive me and shrcd in (10,11) and at least 2 years in comp
-nyse=ccm_jun[(ccm_jun['exchcd']==1) & (ccm_jun['beme']>0) & (ccm_jun['me']>0) & (ccm_jun['count_y']>1) & ((ccm_jun['shrcd']==10) | (ccm_jun['shrcd']==11))]
-#####
-# Important to adjust: both crsp_jun and ccm2 contain 'count' and they are of different values, 
-# therefore there appear to be two columns in the new set ccm_jun.
-# So the code right above has to specify which 'count' to use
-# Here I choose 'count_y'
+nyse=ccm_jun[(ccm_jun['exchcd']==1) & (ccm_jun['beme']>0) & (ccm_jun['me']>0) & (ccm_jun['count']>1) & ((ccm_jun['shrcd']==10) | (ccm_jun['shrcd']==11))]
+
 #####
 # size breakdown
 nyse_sz=nyse.groupby(['jdate'])['me'].median().to_frame().reset_index().rename(columns={'me':'sizemedn'})
@@ -294,16 +290,13 @@ def bm_bucket(row):
     return value
 
 # assign size portfolio
-ccm1_jun['szport']=np.where((ccm1_jun['beme']>0)&(ccm1_jun['me']>0)&(ccm1_jun['count_y']>=1), ccm1_jun.apply(sz_bucket, axis=1), '')
+ccm1_jun['szport']=np.where((ccm1_jun['beme']>0)&(ccm1_jun['me']>0)&(ccm1_jun['count']>=1), ccm1_jun.apply(sz_bucket, axis=1), '')
 # assign book-to-market portfolio
-ccm1_jun['bmport']=np.where((ccm1_jun['beme']>0)&(ccm1_jun['me']>0)&(ccm1_jun['count_y']>=1), ccm1_jun.apply(bm_bucket, axis=1), '')
+ccm1_jun['bmport']=np.where((ccm1_jun['beme']>0)&(ccm1_jun['me']>0)&(ccm1_jun['count']>=1), ccm1_jun.apply(bm_bucket, axis=1), '')
 # create positivebmeme and nonmissport variable
-ccm1_jun['posbm']=np.where((ccm1_jun['beme']>0)&(ccm1_jun['me']>0)&(ccm1_jun['count_y']>=1), 1, 0)
+ccm1_jun['posbm']=np.where((ccm1_jun['beme']>0)&(ccm1_jun['me']>0)&(ccm1_jun['count']>=1), 1, 0)
 ccm1_jun['nonmissport']=np.where((ccm1_jun['bmport']!=''), 1, 0)
 
-#############
-#Attention!! the 'count' above need to be adjusted to 'count_y' in order to get it run successfully
-#############
 
 # store portfolio assignment as of June
 june=ccm1_jun[['permno','date', 'jdate', 'bmport','szport','posbm','nonmissport']]
@@ -380,7 +373,7 @@ print(stats.pearsonr(_ffcomp70['hml'], _ffcomp70['WHML']))
 mydata=[stats.pearsonr(_ffcomp70['smb'], _ffcomp70['WSMB']),stats.pearsonr(_ffcomp70['hml'], _ffcomp70['WHML'])]
 mydata
 a=DataFrame(mydata, index=['SMB','HML'], columns=['correlation coefficient','p value'])
-print(a)
+a
 
 ###################
 # Visualization of comparison #
@@ -396,7 +389,7 @@ plt.title("SMB")
 plt.plot(_ffcomp70['date'],_ffcomp70['smb'],label = 'smb',color='red')
 plt.plot(_ffcomp70['date'],_ffcomp70['WSMB'], label = 'WSMB',color='blue')
 plt.legend(loc="best")
-ax1.set_xlim([datetime.date(1972, 7, 31), datetime.date(2018, 12, 31)])
+ax1.set_xlim([datetime.date(1961, 7, 31), datetime.date(2018, 12, 31)])
 plt.setp(ax1.get_xticklabels(), visible=False)
 
 ax2=plt.subplot(2, 1, 2)
@@ -405,7 +398,7 @@ plt.ylabel("Return")
 plt.title("HML")
 plt.plot(_ffcomp70['date'],_ffcomp70['hml'],label = 'hml', color='red')
 plt.plot(_ffcomp70['date'],_ffcomp70['WHML'],label = 'WHML', color='blue')
-ax2.set_xlim([datetime.date(1972, 7, 31), datetime.date(2018, 12, 31)])
+ax2.set_xlim([datetime.date(1961, 7, 31), datetime.date(2018, 12, 31)])
 plt.legend(loc="best")
 plt.show()
 
