@@ -4,3 +4,6 @@ https://wrds-web.wharton.upenn.edu/wrds/tools/variable.cfm?library_id=137&file_i
 
 The data comes from Kenneth French's web site at Dartmouth
 http://mba.tuck.dartmouth.edu/pages/faculty/ken.french/index.html
+
+Fama French Research Portfolios and Factors
+https://wrds-www.wharton.upenn.edu/pages/support/manuals-and-overviews/fama-french/fama-french-research-portfolios-and-factors/
