@@ -1,5 +1,9 @@
 https://wrds-www.wharton.upenn.edu/pages/support/applications/python-replications/fama-french-factors-python/
 
+Fama French SAS results on WRDS
+https://wrds-www.wharton.upenn.edu/pages/support/applications/risk-factors-and-industry-benchmarks/fama-french-factors/#top
+
+
 https://wrds-web.wharton.upenn.edu/wrds/tools/variable.cfm?library_id=137&file_id=66976
 
 The data comes from Kenneth French's web site at Dartmouth
