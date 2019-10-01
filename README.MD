@@ -10,3 +10,6 @@ https://wrds-www.wharton.upenn.edu/pages/support/manuals-and-overviews/fama-fren
 
 Current Research Returns
 http://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html
+
+Fama French Support Articles
+http://wrds-www.wharton.upenn.edu/pages/support/support-articles/fama-french/
