@@ -7,3 +7,6 @@ http://mba.tuck.dartmouth.edu/pages/faculty/ken.french/index.html
 
 Fama French Research Portfolios and Factors
 https://wrds-www.wharton.upenn.edu/pages/support/manuals-and-overviews/fama-french/fama-french-research-portfolios-and-factors/
+
+Current Research Returns
+http://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html
