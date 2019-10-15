@@ -17,3 +17,7 @@ http://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html
 
 Fama French Support Articles
 http://wrds-www.wharton.upenn.edu/pages/support/support-articles/fama-french/
+
+Location for SAS codes on RCC
+project2\dachxiu\hf_fama_french
+
