@@ -1,3 +1,5 @@
+The file "FF_Model_with_Explanation.py" should be your primary reference when replicating new factors in python
+
 https://wrds-www.wharton.upenn.edu/pages/support/applications/python-replications/fama-french-factors-python/
 
 Fama French SAS results on WRDS
