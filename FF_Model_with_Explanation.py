@@ -301,6 +301,9 @@ ccm1_jun['nonmissport']=np.where((ccm1_jun['bmport']!=''), 1, 0)
 # store portfolio assignment as of June
 june=ccm1_jun[['permno','date', 'jdate', 'bmport','szport','posbm','nonmissport']]
 june['ffyear']=june['jdate'].dt.year
+#if in any case there is a warning regarding view versus copy, try the code below
+#june.insert(len(june.columns), 'ffyear', june['jdate'].dt.year)
+#june.loc[:, 'ffyear'] = june['jdate'].dt.year
 
 # merge back with monthly records
 crsp3 = crsp3[['date','permno','shrcd','exchcd','retadj','me','wt','cumretx','ffyear','jdate']]
@@ -402,4 +405,34 @@ ax2.set_xlim([datetime.date(1961, 7, 31), datetime.date(2018, 12, 31)])
 plt.legend(loc="best")
 plt.show()
 
+#further inspection on cumulative returns
+plt.figure(figsize=(12,8)) 
+plt.suptitle("Comparison of Results", fontsize=14)
 
+ax1=plt.subplot(2, 1, 1)
+_ffcomp60smb=_ffcomp[['date','smb','WSMB']]
+_ffcomp60smb.set_index(["date"], inplace=True)
+plt.ylabel("Cumulative Return")
+plt.title("SMB")
+plt.plot((_ffcomp60smb + 1).cumprod() - 1)
+#plt.legend(loc="best")
+ax1.set_xlim([datetime.date(1961, 7, 31), datetime.date(2018, 12, 31)])
+
+ax2=plt.subplot(2, 1, 2)
+_ffcomp60hml=_ffcomp[['date','hml','WHML']]
+_ffcomp60hml.set_index(["date"], inplace=True)
+plt.xlabel('Time(y)')
+plt.ylabel("Cumulative Return")
+plt.title("HML")
+#plt.legend(loc="best")
+plt.plot((_ffcomp60hml + 1).cumprod() - 1) 
+ax2.set_xlim([datetime.date(1961, 7, 31), datetime.date(2018, 12, 31)])
+
+###################
+# Key reflections on the construction #
+###################
+#Q1: What is our sample pool?
+#Q2: How often do we renew the portfolio?
+#Q3: What databases are used?
+#Q4: How to define the criteria for size and value?
+# Basically this program updates its portfolio on a yearly base. From July at year-t to June at year-t+1, it can calculate the monthly value-weighted return of each portfolio and eventually give us factors we need. Benchmark for classification is NYSE's Me in June and Beme in December last year. 
