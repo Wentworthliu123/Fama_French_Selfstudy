@@ -75,14 +75,15 @@ comp['ps']=np.where(comp['ps'].isnull(),comp['pstk'], comp['ps'])
 comp['ps']=np.where(comp['ps'].isnull(),0,comp['ps'])
 #manipulate ps data in the sequense of redemption, liquidating and total value, last resolution is 0
 comp['txditc']=comp['txditc'].fillna(0)
-comp['lat']=comp['at'].shift(1)
-
+#comp['lat']=comp.groupby(['gvkey'])['at'].shift(1)
+comp['lat']=comp.sort_values(by=['datadate'], ascending=True).groupby(['gvkey'])['at'].shift(1)
 # create book equity
 comp['be']=comp['seq']+comp['txditc']-comp['ps']
-comp['be']=np.where(comp['be']>0, comp['be'], np.nan)
-comp=comp.dropna(subset=['be'])
+# comp['be']=np.where(comp['be']>0, comp['be'], np.nan)
+# comp=comp.dropna(subset=['be'])
+#comp=comp[(~comp['lat'].isnull()) & (~comp['at'].isnull())]
 comp['inv']=(comp['lat']-comp['at'])/comp['at']
-comp=comp.dropna(subset=['inv'])
+#comp=comp.dropna(subset=['inv'])
 
 #Book value of equity equals to Stockholders Equity + Deferred Tax - Preferred Stocks 
 #set nan value for book equity that is less than 0
@@ -269,12 +270,13 @@ ccm_jun['beme']=ccm_jun['be']*1000/ccm_jun['dec_me']
 # select NYSE stocks for bucket breakdown
 # exchcd = 1 and positive beme and positive me and shrcd in (10,11) and at least 2 years in comp
 nyse=ccm_jun[(ccm_jun['exchcd']==1) & (ccm_jun['beme']>0) & (ccm_jun['me']>0) & (ccm_jun['count']>=1) & ((ccm_jun['shrcd']==10) | (ccm_jun['shrcd']==11))]
-
+#Note we don't need nyse to have positive beme
+nyseinv=ccm_jun[(ccm_jun['exchcd']==1) & (ccm_jun['me']>0) & (ccm_jun['count']>=1) & ((ccm_jun['shrcd']==10) | (ccm_jun['shrcd']==11))]
 #####
 # size breakdown
 nyse_sz=nyse.groupby(['jdate'])['me'].median().to_frame().reset_index().rename(columns={'me':'sizemedn'})
 # beme breakdown
-nyse_inv=nyse.groupby(['jdate'])['inv'].describe(percentiles=[0.3, 0.7]).reset_index()
+nyse_inv=nyseinv.groupby(['jdate'])['inv'].describe(percentiles=[0.3, 0.7]).reset_index()
 nyse_inv=nyse_inv[['jdate','30%','70%']].rename(columns={'30%':'inv30', '70%':'inv70'})
 
 nyse_breaks = pd.merge(nyse_sz, nyse_inv, how='inner', on=['jdate'])
@@ -306,7 +308,7 @@ def ca_bucket(row):
 # assign size portfolio
 ccm1_jun['szport']=np.where((ccm1_jun['beme']>0)&(ccm1_jun['me']>0)&(ccm1_jun['count']>=1), ccm1_jun.apply(sz_bucket, axis=1), '')
 # assign book-to-market portfolio
-ccm1_jun['caport']=np.where((ccm1_jun['beme']>0)&(ccm1_jun['me']>0)&(ccm1_jun['count']>=1), ccm1_jun.apply(ca_bucket, axis=1), '')
+ccm1_jun['caport']=np.where((ccm1_jun['me']>0)&(ccm1_jun['count']>=1), ccm1_jun.apply(ca_bucket, axis=1), '')
 # create positivebmeme and nonmissport variable
 ccm1_jun['posbm']=np.where((ccm1_jun['beme']>0)&(ccm1_jun['me']>0)&(ccm1_jun['count']>=1), 1, 0)
 ccm1_jun['nonmissport']=np.where((ccm1_jun['caport']!=''), 1, 0)
