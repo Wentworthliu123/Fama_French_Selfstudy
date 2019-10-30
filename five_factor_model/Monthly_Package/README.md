@@ -19,4 +19,4 @@ You may find errors or tiny difference in each file, don't hesitate to reach out
 
 ## Acknowledgments
 
-* Grateful for the guidence of guidance of Prof. Xiu
+* Grateful for the guidence of guidance of Prof. Dacheng Xiu
