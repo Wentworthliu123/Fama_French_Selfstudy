@@ -37,7 +37,7 @@ comp = conn.raw_sql("""
                     and datafmt='STD'
                     and popsrc='D'
                     and consol='C'
-                    and datadate >= '01/01/1970'
+                    and datadate >= '01/01/1990'
                     """)
 #ctrl+/ make comments for multiple lines
 ##################
@@ -55,7 +55,7 @@ comp = conn.raw_sql("""
 #convert datadate to date fmt
 comp['datadate']=pd.to_datetime(comp['datadate']) 
 comp['year']=comp['datadate'].dt.year
-#eg:from 2015-02-04（dtype: object） to 2015-02-04(datetime64[ns])
+#eg:from 2015-02-04（dtype: object�?to 2015-02-04(datetime64[ns])
 #create a new column for 'year'
 
 
@@ -69,7 +69,7 @@ comp['txditc']=comp['txditc'].fillna(0)
 
 # create book equity
 comp['be']=comp['seq']+comp['txditc']-comp['ps']
-comp['be']=np.where(comp['be']>0, comp['be'], np.nan)
+#comp['be']=np.where(comp['be']>0, comp['be'], np.nan)
 #Book value of equity equals to Stockholders Equity + Deferred Tax - Preferred Stocks 
 #set nan value for book equity that is less than 0
 
@@ -93,7 +93,7 @@ crsp_m = conn.raw_sql("""
                       on a.permno=b.permno
                       and b.namedt<=a.date
                       and a.date<=b.nameendt
-                      where a.date between '01/01/1970' and '12/31/2018'
+                      where a.date between '01/01/1990' and '12/31/2018'
                       and b.exchcd between 1 and 3
                       """) 
 #crsp.msf refers to Monthly Stock File: Monthly Stock - Securities
@@ -223,7 +223,6 @@ ccm=conn.raw_sql("""
                   linkdt, linkenddt
                   from crsp.ccmxpf_linktable
                   where substr(linktype,1,1)='L'
-                  and (linkprim ='C' or linkprim='P')
                   """)
 #CCMXPF_LINKTABLE		CRSP/COMPUSTAT Merged - Link History w/ Used Flag
 #lpermno 	Num	8	Historical CRSP PERMNO Link to COMPUSTAT Record
@@ -271,16 +270,16 @@ ccm1_jun = pd.merge(ccm_jun, nyse_breaks, how='left', on=['jdate'])
 
 # function to assign sz and bm bucket
 def sz_bucket(row):
-    if row['me']==np.nan:
-        value=''
-    elif row['me']<=row['sizemedn']:
+    if 0<=row['me']<=row['sizemedn']:
         value='S'
-    else:
+    elif row['me']>row['sizemedn']:
         value='B'
+    else:
+        value=''
     return value
 
 def bm_bucket(row):
-    if 0<=row['beme']<=row['bm30']:
+    if row['beme']<=row['bm30']:
         value = 'L'
     elif row['beme']<=row['bm70']:
         value='M'
@@ -296,7 +295,7 @@ ccm1_jun['szport']=np.where((ccm1_jun['beme']>0)&(ccm1_jun['me']>0)&(ccm1_jun['c
 ccm1_jun['bmport']=np.where((ccm1_jun['beme']>0)&(ccm1_jun['me']>0)&(ccm1_jun['count']>=1), ccm1_jun.apply(bm_bucket, axis=1), '')
 # create positivebmeme and nonmissport variable
 ccm1_jun['posbm']=np.where((ccm1_jun['beme']>0)&(ccm1_jun['me']>0)&(ccm1_jun['count']>=1), 1, 0)
-ccm1_jun['nonmissport']=np.where((ccm1_jun['bmport']!=''), 1, 0)
+ccm1_jun['nonmissport']=np.where((ccm1_jun['bmport']!='')&(ccm1_jun['szport']!=''), 1, 0)
 
 
 # store portfolio assignment as of June
@@ -307,7 +306,7 @@ june['ffyear']=june['jdate'].dt.year
 #june.loc[:, 'ffyear'] = june['jdate'].dt.year
 
 # merge back with monthly records
-crsp3 = crsp3[['date','permno','shrcd','exchcd','retadj','me','wt','cumretx','ffyear','jdate']]
+crsp3 = crsp3[['date','permno','shrcd','exchcd','retadj','me','wt','lme','cumretx','ffyear','jdate']]
 ccm3=pd.merge(crsp3, 
         june[['permno','ffyear','szport','bmport','posbm','nonmissport']], how='left', on=['permno','ffyear'])
 
@@ -329,26 +328,29 @@ def wavg(group, avg_name, weight_name):
         return np.nan
 
 # value-weigthed return
-vwret=ccm4.groupby(['jdate','szport','bmport']).apply(wavg, 'retadj','wt').to_frame().reset_index().rename(columns={0: 'vwret'})
-vwret['sbport']=vwret['szport']+vwret['bmport']
-
+vwret_size=ccm4.groupby(['jdate','szport','bmport']).apply(wavg, 'retadj','wt').to_frame().reset_index().rename(columns={0: 'vwret'})
+vwret_hml=ccm4.groupby(['jdate','szport','bmport']).apply(wavg, 'retadj','lme').to_frame().reset_index().rename(columns={0: 'vwret'})
+vwret_size['sbport']=vwret_size['szport']+vwret_size['bmport']
+vwret_hml['sbport']=vwret_hml['szport']+vwret_hml['bmport']
 # firm count
 vwret_n=ccm4.groupby(['jdate','szport','bmport'])['retadj'].count().reset_index().rename(columns={'retadj':'n_firms'})
 vwret_n['sbport']=vwret_n['szport']+vwret_n['bmport']
 
 # tranpose
-ff_factors=vwret.pivot(index='jdate', columns='sbport', values='vwret').reset_index()
+ff_factors_size=vwret_size.pivot(index='jdate', columns='sbport', values='vwret').reset_index()
+ff_factors_hml=vwret_hml.pivot(index='jdate', columns='sbport', values='vwret').reset_index()
 ff_nfirms=vwret_n.pivot(index='jdate', columns='sbport', values='n_firms').reset_index()
 
 # create SMB and HML factors
-ff_factors['WH']=(ff_factors['BH']+ff_factors['SH'])/2
-ff_factors['WL']=(ff_factors['BL']+ff_factors['SL'])/2
-ff_factors['WHML'] = ff_factors['WH']-ff_factors['WL']
+ff_factors_hml['WH']=(ff_factors_hml['BH']+ff_factors_hml['SH'])/2
+ff_factors_hml['WL']=(ff_factors_hml['BL']+ff_factors_hml['SL'])/2
+ff_factors_hml['WHML'] = ff_factors_hml['WH']-ff_factors_hml['WL']
+ff_factors_hml=ff_factors_hml.rename(columns={'jdate':'date'})
 
-ff_factors['WB']=(ff_factors['BL']+ff_factors['BM']+ff_factors['BH'])/3
-ff_factors['WS']=(ff_factors['SL']+ff_factors['SM']+ff_factors['SH'])/3
-ff_factors['WSMB'] = ff_factors['WS']-ff_factors['WB']
-ff_factors=ff_factors.rename(columns={'jdate':'date'})
+ff_factors_size['WB']=(ff_factors_size['BL']+ff_factors_size['BM']+ff_factors_size['BH'])/3
+ff_factors_size['WS']=(ff_factors_size['SL']+ff_factors_size['SM']+ff_factors_size['SH'])/3
+ff_factors_size['WSMB'] = ff_factors_size['WS']-ff_factors_size['WB']
+ff_factors_size=ff_factors_size.rename(columns={'jdate':'date'})
 
 # n firm count
 ff_nfirms['H']=ff_nfirms['SH']+ff_nfirms['BH']
@@ -368,8 +370,10 @@ _ff = conn.get_table(library='ff', table='factors_monthly')
 _ff=_ff[['date','smb','hml']]
 _ff['date']=_ff['date']+MonthEnd(0)
 
-_ffcomp = pd.merge(_ff, ff_factors[['date','WSMB','WHML']], how='inner', on=['date'])
-_ffcomp70=_ffcomp[_ffcomp['date']>='01/01/1970']
+_ffcomptep = pd.merge(_ff, ff_factors_size[['date','WSMB']], how='inner', on=['date'])
+_ffcomp = pd.merge(_ffcomptep, ff_factors_hml[['date','WHML']], how='inner', on=['date'])
+
+_ffcomp70=_ffcomp[_ffcomp['date']>='01/07/1995']
 print(stats.pearsonr(_ffcomp70['smb'], _ffcomp70['WSMB']))
 print(stats.pearsonr(_ffcomp70['hml'], _ffcomp70['WHML']))
 
@@ -381,8 +385,8 @@ a=DataFrame(mydata, index=['SMB','HML'], columns=['correlation coefficient','p v
 # Visualization of comparison #
 ###################
 #You may wanna change the data range in the future for case by case use
-psyear=1971
-psmonth=7
+psyear=1995
+psmonth=5
 
 peyear=2018
 pemonth=12
@@ -414,7 +418,7 @@ pdf2=plt.figure(figsize=(12,8))
 plt.suptitle("Comparison of Results", fontsize=14)
 
 ax1=plt.subplot(2, 1, 1)
-_ffcomp60smb=_ffcomp[['date','smb','WSMB']]
+_ffcomp60smb=_ffcomp70[['date','smb','WSMB']]
 _ffcomp60smb.set_index(["date"], inplace=True)
 plt.ylabel("Cumulative Return")
 plt.title("SMB")
@@ -423,7 +427,7 @@ plt.plot((_ffcomp60smb + 1).cumprod() - 1)
 ax1.set_xlim([datetime.date(psyear, psmonth, pday), datetime.date(peyear, pemonth, pday)])
 
 ax2=plt.subplot(2, 1, 2)
-_ffcomp60hml=_ffcomp[['date','hml','WHML']]
+_ffcomp60hml=_ffcomp70[['date','hml','WHML']]
 _ffcomp60hml.set_index(["date"], inplace=True)
 plt.xlabel('Time(y)')
 plt.ylabel("Cumulative Return")
