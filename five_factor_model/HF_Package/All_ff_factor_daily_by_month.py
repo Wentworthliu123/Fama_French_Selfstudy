@@ -14,9 +14,11 @@
 
 #the first line is necessary to run this code on server
 ##########################################
-# Fama French Factors -- Daily SIZE and HML
-# October 30 2019
+# Fama French Factors -- Daily portfolio for a given month
+# Nov 7 2019
 # Created by Xinyu LIU
+# This program is created to generate all factor daily portfolio for any given month. 
+# The output can then be used to perform intraday calculation.
 ##########################################
 
 import pandas as pd
