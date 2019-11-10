@@ -45,21 +45,23 @@ df_bar=pd.DataFrame()
 df_bar[['date','time']] = pd.date_range('09:30', '16:00', freq= '5min').to_series().apply(
             lambda x: pd.Series([i for i in str(x).split(" ")]))
 df_bar.index = range(len(df_bar))
-
+datecomplete = list(map(lambda x: x.strftime("%Y%m%d"),DataPcnew.date))
+datelist=list(set(datecomplete))
+datelist.sort()
 # Getting date time list
-def dateRange(beginDate, endDate):
-    dates = []
-    dt = beginDate
-    date = str()
-    while dt <= endDate:
-        date = dt.strftime("%Y%m%d")
-        dates.append(date)
-        dt = dt + datetime.timedelta(1)
-    return dates
+# def dateRange(beginDate, endDate):
+#     dates = []
+#     dt = beginDate
+#     date = str()
+#     while dt <= endDate:
+#         date = dt.strftime("%Y%m%d")
+#         dates.append(date)
+#         dt = dt + datetime.timedelta(1)
+#     return dates
 
-datelist = dateRange(beginDate=pdstart, endDate=pdend)
+# datelist = dateRange(beginDate=pdstart, endDate=pdend)
 
-path='/project2/dachxiu/hf_ff_project/index_day'
+path='/project2/dachxiu/hf_ff_project/index_day/'
 kd_m=m.copy()
 all_kd=pd.DataFrame()
 for eachday in datelist:
@@ -178,6 +180,8 @@ ff_factors_merged.drop(columns=['date','intratime'], inplace=True)
 ###################
 #  Plotting  #
 ###################
+import matplotlib
+matplotlib.use('pdf')
 import matplotlib.pyplot as plt
 plotff=ff_factors_merged.copy()
 plotff.reset_index(inplace=True,drop='True')
@@ -196,4 +200,5 @@ plt.savefig(datelist[0]+'_to_'+datelist[-1]+'_cumulative.pdf')
 #  Saving results  #
 ###################
 ff_factors_merged.to_csv(datelist[0][2:]+'_'+datelist[-1][4:]+"_daily_all.csv")
+
 
