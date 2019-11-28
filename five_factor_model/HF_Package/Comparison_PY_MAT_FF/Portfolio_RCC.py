@@ -328,7 +328,7 @@ def portfolio(start,end):
     ccm1_mom['momport']=ccm1_mom.apply(mom_bucket, axis=1)
     ccm1_mom['momposbm']=np.where((ccm1_mom['me']>0), 1, 0)
     ccm1_mom['nonmissport_mom']=np.where((ccm1_mom['momport']!=''), 1, 0)
-    ccm1_mom['jdate']=ccm1_mom['date']+MonthEnd(1)
+    ccm1_mom['jdate']=ccm1_mom['date']+MonthEnd(0)+MonthEnd(1)
     everymom=ccm1_mom[['permno','date', 'jdate', 'momport','momposbm','nonmissport_mom']]
 
     ############################
