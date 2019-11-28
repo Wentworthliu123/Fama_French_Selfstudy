@@ -406,5 +406,6 @@ def portfolio(start,end):
 
     # keeping only records that meet the criteria
     ccm4=ccm3[(ccm3['wt']>0) & (ccm3['posbm']==1) &  (ccm3['momposbm']==1)]
+    ccm4=ccm4.drop_duplicates(subset=['date','permno'], keep='last').drop(['Unnamed: 0'],axis=1)
     ccm4.to_csv("{}_{}_daily_all_RCC.csv".format(str(rangestart),str(rangeend)[4:]))
     return ccm4
