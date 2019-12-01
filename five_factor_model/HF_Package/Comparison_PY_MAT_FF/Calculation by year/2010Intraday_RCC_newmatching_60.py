@@ -199,7 +199,7 @@ ff_factors_merged.drop(columns=['SMB_HML','SMB_RMW','SMB_CMA'], inplace=True)
 ###################
 #  Saving results  #
 ###################
-ff_factors_merged.to_csv(datelist[0][2:]+'_'+datelist[-1][4:]+"_intraday.csv")
+ff_factors_merged.to_csv(pdstart[2:]+'_'+pdend[4:]+"_intraday.csv")
 
 
 
